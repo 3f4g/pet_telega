@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { Button } from "@/shared/ui/ui/button";
+import { Input } from "@/shared/ui/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/ui/select";
+import { cn } from "@/shared/lib/utils";
 import { useRef, type FormEvent } from "react";
 
 export function APITester() {
