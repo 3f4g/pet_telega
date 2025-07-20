@@ -1,5 +1,6 @@
-import { Card, CardContent } from "@/shared/ui/ui/card";
 import { APITester } from "./APITester";
+
+import { Card, CardContent } from "@/shared/ui/ui/card";
 import "./index.css";
 
 import logo from "./logo.svg";

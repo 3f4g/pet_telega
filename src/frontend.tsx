@@ -5,14 +5,20 @@
  * It is included in `src/index.html`.
  */
 
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { App } from "./App";
+import { StrictMode } from 'react';
 
-const elem = document.getElementById("root")!;
+import { createRoot } from 'react-dom/client';
+
+import { App } from './App';
+
+import StoreProvider from '@/app/providers/store/StoreProvider';
+
+const elem = document.getElementById('root')!;
 const app = (
   <StrictMode>
-    <App />
+    <StoreProvider>
+      <App />
+    </StoreProvider>
   </StrictMode>
 );
 

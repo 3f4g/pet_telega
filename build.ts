@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
-import { build, type BuildConfig } from "bun";
-import plugin from "bun-plugin-tailwind";
 import { existsSync } from "fs";
 import { rm } from "fs/promises";
 import path from "path";
+
+import plugin from "bun-plugin-tailwind";
+import { build, type BuildConfig } from "bun";
 
 // Print help text if requested
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
