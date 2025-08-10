@@ -1,66 +1,64 @@
-import { APITester } from "./APITester";
-
-import { Card, CardContent } from "@/shared/ui/ui/card";
-import "./index.css";
-
-import logo from "./logo.svg";
-import reactLogo from "./react.svg";
-
-import { initializeApp } from "firebase/app";
-
-export function App() {
-
-// Import the functions you need from the SDKs you need
-
-// TODO: Add SDKs for Firebase products that you want to use
-
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+import { useCallback, useEffect } from 'react';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import {
+  getAuth,
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+} from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAa1J12-YAXPmaKaDQanfiCW3fbIJjp_SI",
-  authDomain: "pet-messenger.firebaseapp.com",
-  projectId: "pet-messenger",
-  storageBucket: "pet-messenger.firebasestorage.app",
-  messagingSenderId: "725978302343",
-  appId: "1:725978302343:web:a95808aab1c0587d247522"
+  apiKey: 'AIzaSyAa1J12-YAXPmaKaDQanfiCW3fbIJjp_SI',
+  authDomain: 'pet-messenger.firebaseapp.com',
+  projectId: 'pet-messenger',
+  storageBucket: 'pet-messenger.firebasestorage.app',
+  messagingSenderId: '725978302343',
+  appId: '1:725978302343:web:a95808aab1c0587d247522',
 };
 
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Initialize Firebase
+const provider = new GoogleAuthProvider();
+// по желанию — всегда показывать выбор аккаунта
+provider.setCustomParameters({ prompt: 'select_account' });
 
-const app = initializeApp(firebaseConfig);
+export default function App() {
+  useEffect(() => {
+    // сохраняем сессию между перезагрузками
+    setPersistence(auth, browserLocalPersistence).catch(console.error);
 
+    // следим за изменением пользователя
+    const unsub = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state:', user ? 'SIGNED IN' : 'SIGNED OUT', user);
+    });
+    return unsub;
+  }, []);
+
+  const handleGoogleSignIn = useCallback(async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const token = credential?.accessToken;
+      console.log('Signed in via popup:', { user: result.user, token });
+    } catch (e: any) {
+    
+      console.log('Auth popup error:', e.code, e.message);
+
+    }
+  }, []);
+
+  const handleSignOut = useCallback(() => signOut(auth), []);
 
   return (
-    <div className="container mx-auto p-8 text-center relative z-10">
-      <div className="flex justify-center items-center gap-8 mb-8">
-        <img
-          src={logo}
-          alt="Bun Logo"
-          className="h-36 p-6 transition-all duration-300 hover:drop-shadow-[0_0_2em_#646cffaa] scale-120"
-        />
-        <img
-          src={reactLogo}
-          alt="React Logo"
-          className="h-36 p-6 transition-all duration-300 hover:drop-shadow-[0_0_2em_#61dafbaa] [animation:spin_20s_linear_infinite]"
-        />
-      </div>
-
-      <Card className="bg-card/50 backdrop-blur-sm border-muted">
-        <CardContent className="pt-6">
-          <h1 className="text-5xl font-bold my-4 leading-tight">Bun + React</h1>
-          <p>
-            Edit{" "}
-            <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm">src/App.tsx</code> and
-            save to test HMR
-          </p>
-          <APITester />
-        </CardContent>
-      </Card>
-    </div>
+    <header>
+      <button onClick={handleGoogleSignIn}>Sign in with Google (popup)</button>
+      <button onClick={handleSignOut}>Sign out</button>
+    </header>
   );
 }
-
-export default App;
