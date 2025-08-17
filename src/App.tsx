@@ -1,64 +1,104 @@
-import { useCallback, useEffect } from 'react';
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import {
-  getAuth,
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-} from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+// import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+// import { firebaseConfig } from './firebase.config';
+// import { useAuth } from './features/auth/useAuth/useAuth';
+// import { useSelector } from 'react-redux';
+// import { selectUser } from './features/auth/model/selectors';
+// import { AuthWidget } from './widgets/AuthWidget/AuthWidget';
+// import { sendMessage } from './features/chat/testsend';
+// import { useEffect } from 'react';
 
-const firebaseConfig = {
-  apiKey: 'AIzaSyAa1J12-YAXPmaKaDQanfiCW3fbIJjp_SI',
-  authDomain: 'pet-messenger.firebaseapp.com',
-  projectId: 'pet-messenger',
-  storageBucket: 'pet-messenger.firebasestorage.app',
-  messagingSenderId: '725978302343',
-  appId: '1:725978302343:web:a95808aab1c0587d247522',
-};
+// interface IAppProps {
+//   firebaseApp: FirebaseApp;
+// }
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// export default function App({firebaseApp}: IAppProps) {
+//   // const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-const provider = new GoogleAuthProvider();
-// по желанию — всегда показывать выбор аккаунта
-provider.setCustomParameters({ prompt: 'select_account' });
+//   const { handleGoogleSignIn, handleSignOut } = useAuth(firebaseApp);
+//   const user = useSelector(selectUser);
 
-export default function App() {
+//   // console.log('USER from redux:', user);
+
+//   useEffect(() => {
+
+//     if (!user) return;
+//     // подставь реального пользователя (авторизованного в Firebase)
+//     const testUser = {
+//       uid: user.uid,
+//       displayName: user.displayName,
+//       photoURL: null,
+//     };
+
+//     sendMessage('1', "test message", testUser)
+//       .then(() => console.log("Message sent"))
+//       .catch((err) => console.error("Error sending message:", err));
+//   }, [user]);
+
+//   return (
+//     <div className="flex flex-col items-center justify-center align-center w-full h-full">
+//       {user ? (
+//         <>
+//           <p>Signed in as {user.email}</p>
+//           <button onClick={handleSignOut}>Sign out</button>
+//         </>
+//       ) : (
+//         <AuthWidget onLogin={handleGoogleSignIn} />
+//       )}
+//     </div>
+//   );
+// }
+
+import type { FirebaseApp } from 'firebase/app';
+import { useAuth } from './features/auth/useAuth/useAuth';
+import { useSelector } from 'react-redux';
+import { selectUser } from './features/auth/model/selectors';
+import { AuthWidget } from './widgets/AuthWidget/AuthWidget';
+import { sendMessage } from './features/chat/testsend';
+import { useEffect, useState } from 'react';
+import { subscribeMessages } from './features/chat/testreceive';
+
+interface IAppProps {
+  firebaseApp: FirebaseApp;
+}
+
+export default function App({ firebaseApp }: IAppProps) {
+  const { handleGoogleSignIn, handleSignOut } = useAuth(firebaseApp);
+  const user = useSelector(selectUser);
+
   useEffect(() => {
-    // сохраняем сессию между перезагрузками
-    setPersistence(auth, browserLocalPersistence).catch(console.error);
+    if (!user) return;
 
-    // следим за изменением пользователя
-    const unsub = onAuthStateChanged(auth, (user) => {
-      console.log('Auth state:', user ? 'SIGNED IN' : 'SIGNED OUT', user);
-    });
-    return unsub;
+    sendMessage('1', 'новое тестовое сообщение 2', {
+      uid: user.uid,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+    })
+      .then(() => console.log('Message sent 🚀'))
+      .catch((err) => console.error('Error sending message:', err));
+  }, [user]);
+
+  const [messages, setMessages] = useState<any[]>([]);
+
+  useEffect(() => {
+    const unsub = subscribeMessages('1', setMessages);
+    return () => unsub(); // отписка при размонтировании
   }, []);
 
-  const handleGoogleSignIn = useCallback(async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const token = credential?.accessToken;
-      console.log('Signed in via popup:', { user: result.user, token });
-    } catch (e: any) {
+  useEffect(() => {
+    console.log('messages', messages);
     
-      console.log('Auth popup error:', e.code, e.message);
-
-    }
-  }, []);
-
-  const handleSignOut = useCallback(() => signOut(auth), []);
+  }, [messages])
 
   return (
-    <header>
-      <button onClick={handleGoogleSignIn}>Sign in with Google (popup)</button>
-      <button onClick={handleSignOut}>Sign out</button>
-    </header>
+    <div className="flex flex-col items-center justify-center w-full h-full">
+      {user ? (
+        <>
+          <p>Signed in as {user.email}</p>
+          <button onClick={handleSignOut}>Sign out</button>
+        </>
+      ) : (
+        <AuthWidget onLogin={handleGoogleSignIn} />
+      )}
+    </div>
   );
 }

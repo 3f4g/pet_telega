@@ -12,12 +12,15 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 
 import StoreProvider from '@/app/providers/store/StoreProvider';
+import './index.css';
+import { firebaseApp } from './firebase';
+import type { FirebaseApp } from 'firebase/app';
 
 const elem = document.getElementById('root')!;
 const app = (
   <StrictMode>
     <StoreProvider>
-      <App />
+      <App firebaseApp={firebaseApp}/>
     </StoreProvider>
   </StrictMode>
 );
