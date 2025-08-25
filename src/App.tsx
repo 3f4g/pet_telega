@@ -59,7 +59,7 @@ import { useAuth } from './features/auth/useAuth/useAuth';
 import { useSelector } from 'react-redux';
 import { selectUser } from './features/auth/model/selectors';
 import { AuthWidget } from './widgets/AuthWidget/AuthWidget';
-import { DirectChat } from './features/chat/TestChat';
+import { MessengerLayout } from './features/chat/TestChat';
 
 interface IAppProps {
   firebaseApp: FirebaseApp;
@@ -73,14 +73,14 @@ export default function App({ firebaseApp }: IAppProps) {
     <div className="flex flex-col items-center justify-center w-full h-full p-4">
       {user ? (
         <>
-          <p className="mb-2">Signed in as {user.email}</p>
+          <p className="mb-2 text-white">Signed in as {user.email}, id: {user.uid}</p>
           <button
             onClick={handleSignOut}
             className="mb-4 px-4 py-2 bg-red-600 text-white rounded"
           >
             Sign out
           </button>
-          <DirectChat currentUser={user} />
+          <MessengerLayout currentUser={user} />
         </>
       ) : (
         <AuthWidget onLogin={handleGoogleSignIn} />
