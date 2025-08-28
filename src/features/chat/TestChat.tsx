@@ -1,18 +1,5 @@
 import type { User } from 'firebase/auth';
-import { useEffect, useRef, useState } from 'react';
-import { db } from '@/firebase';
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  addDoc,
-  serverTimestamp,
-  doc,
-  setDoc,
-  getDoc,
-} from 'firebase/firestore';
+
 import { useChat } from './hooks/useChat';
 
 interface Props {
@@ -40,34 +27,33 @@ export const MessengerLayout = ({ currentUser }: Props) => {
   } = useChat();
 
   console.log('cover', messages);
-  
-
 
   return (
     <div className="flex h-[90vh] w-full border rounded overflow-hidden">
       {/* Sidebar */}
       <div className="w-1/3 border-r bg-gray-100 p-2 overflow-y-auto">
         <h2 className="text-lg font-semibold mb-2">Чаты</h2>
-        {conversations && conversations.map((convId) => {
-          const otherUser = convId.split('_').find((id) => id !== currentUser.uid) || 'Unknown';
+        {conversations &&
+          conversations.map((convId) => {
+            const otherUser = convId.split('_').find((id) => id !== currentUser.uid) || 'Unknown';
 
-          
+            const lastMsg = allMessages[convId]?.slice(-1)[0];
 
-          const lastMsg = allMessages[convId]?.slice(-1)[0];
-
-          return (
-            <div
-              key={convId}
-              onClick={() => setActiveConversation(convId)}
-              className={`p-2 rounded cursor-pointer mb-1 ${
-                convId === activeConversation ? 'bg-blue-200' : 'hover:bg-gray-200'
-              }`}
-            >
-              <div className="font-medium">{otherUser}</div>
-              <div className="text-sm text-gray-600 truncate">{lastMsg ? lastMsg.text : '...'}</div>
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={convId}
+                onClick={() => setActiveConversation(convId)}
+                className={`p-2 rounded cursor-pointer mb-1 ${
+                  convId === activeConversation ? 'bg-blue-200' : 'hover:bg-gray-200'
+                }`}
+              >
+                <div className="font-medium">{otherUser}</div>
+                <div className="text-sm text-gray-600 truncate">
+                  {lastMsg ? lastMsg.text : '...'}
+                </div>
+              </div>
+            );
+          })}
 
         {/* Новый чат */}
         <div className="mt-4">
@@ -105,7 +91,13 @@ export const MessengerLayout = ({ currentUser }: Props) => {
               placeholder="Введите сообщение"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="flex-grow px-2 py-1 border rounded"
+              className="flex-grow px-2 py-1 border rounded text-white"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSend();
+                  (e.target as HTMLInputElement).value = '';
+                }
+              }}
             />
             <button onClick={handleSend} className="px-4 py-1 bg-green-600 text-white rounded">
               Отправить
